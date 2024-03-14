@@ -47,4 +47,22 @@ export const deleteEmployee = async (req, res) => {
   res.sendStatus(204);
 };
 
-export const updateEmployee = (req, res) => res.send("Actualizando empleados");
+export const updateEmployee = async (req, res) => {
+  const { id } = req.params;
+  const { name, salary } = req.body;
+
+  const [result] = await pool.query(
+    "UPDATE employee SET name = IFNULL(?, name), salary = IFNULL(?, salary) WHERE id = ?",
+    [name, salary, id]
+  );
+
+  if (result.affectedRows === 0) {
+    return res.status(400).json({
+      message: "Employee not found",
+    });
+  }
+
+  const [rows] = await pool.query("SELECT * FROM employee WHERE id = ?", [id])
+
+  res.json(rows[0]);
+};
